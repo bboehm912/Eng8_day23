@@ -177,6 +177,76 @@ body {
   align-items: center;
 }
 
+.thesis-guide {
+  margin: 18px 0;
+  padding: 20px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: var(--primary-light);
+}
+.thesis-guide h4 { margin: 0 0 8px; color: var(--primary-dark); }
+.thesis-guide p { line-height: 1.5; }
+.thesis-example {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 7px;
+  background: #ffffff;
+}
+.thesis-example strong { display: block; margin-bottom: 4px; }
+.thesis-builder {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+.thesis-builder label { margin-top: 12px; }
+.thesis-builder .response-input { box-sizing: border-box; }
+.thesis-preview {
+  min-height: 52px;
+  margin: 14px 0 0;
+  padding: 12px;
+  border-left: 4px solid var(--primary);
+  border-radius: 5px;
+  background: #f8fafc;
+  line-height: 1.5;
+}
+.form-intro {
+  margin-bottom: 22px;
+  padding: 18px 20px;
+  border-left: 5px solid var(--primary);
+  border-radius: 8px;
+  background: var(--primary-light);
+  line-height: 1.5;
+}
+.question-standard {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: var(--primary-dark);
+  font-size: 0.8em;
+  font-weight: bold;
+}
+.assessment-question {
+  padding: 18px;
+  border: 2px solid var(--primary);
+  border-radius: 10px;
+  background: #f0fdf4;
+}
+.self-assessment-question {
+  padding: 18px;
+  border: 2px solid #7c3aed;
+  border-radius: 10px;
+  background: #faf5ff;
+}
+.response-guidance { margin: 4px 0 12px; color: var(--text-muted); line-height: 1.5; }
+.form-group input[type="radio"], .form-group input[type="checkbox"] { width: auto; }
+@media print {
+  .thesis-guide .ctrl-btn, .nav-tabs, .deck-controls { display: none; }
+}
+
 .form-group {
   margin-bottom: 22px;
   padding-bottom: 18px;
@@ -438,6 +508,24 @@ function renderResources(resources) {
     `;
     container.appendChild(card);
   });
+
+  const guide = document.createElement('section');
+  guide.className = 'thesis-guide';
+  guide.innerHTML = `
+    <h4>Quick Resource: Build a Literary Thesis</h4>
+    <p>Use this mini-guide with the lesson’s Thesis Statement Generation Matrix. A strong thesis names a literary focus, makes a specific arguable claim, and explains why that claim matters to the story’s theme.</p>
+    <div class="thesis-example">
+      <strong>Move beyond plot summary</strong>
+      <span>Summary: “Johnny saves children from a burning church.”</span>
+    </div>
+    <div class="thesis-example">
+      <strong>Make an arguable, meaningful claim</strong>
+      <span>Analysis: “Through Johnny’s sacrifice, Hinton suggests that compassion can give a person’s life meaning even in the face of violence.”</span>
+    </div>
+    <p><strong>Drafting frame:</strong> In <em>The Outsiders</em>, [literary focus] shows that [arguable claim], suggesting that [broader message]. Replace the brackets with your own interpretation, then check that the claim can be supported with details from the novel.</p>
+    <button type="button" class="ctrl-btn" onclick="switchTab('form')">Use the thesis builder in the checkpoint</button>
+  `;
+  container.appendChild(guide);
 }
 
 function renderForm(fields) {
@@ -445,37 +533,142 @@ function renderForm(fields) {
   const submitBtn = form.querySelector('.submit-btn');
   form.innerHTML = '';
 
-  const fieldList = Array.isArray(fields) ? fields : [];
+  const questionUpdates = {
+    q1: {
+      type: 'checkbox_group',
+      label: 'Thesis ingredients: select the three parts a strong literary thesis needs.',
+      options: ['A specific literary focus', 'An arguable claim about what the text means', 'A statement of why the claim matters', 'A plot detail with no interpretation'],
+      prompt: 'Choose three. A thesis does more than name a character or retell an event.'
+    },
+    q2: {
+      prompt: 'Select the statement that makes an interpretation about the novel rather than only reporting a fact or event.'
+    },
+    q3: {
+      label: 'Thesis voice check: A literary thesis needs “I think” or “In my opinion” to show that it is an argument.',
+      prompt: 'Choose True or False, then be ready to explain how a direct claim can show a viewpoint without those phrases.'
+    },
+    q4: {
+      type: 'long_text',
+      label: 'Turn a fact into an argument',
+      prompt: 'Why is “Johnny saves children from a burning church” not enough for a thesis? Extend it into a claim about what Johnny’s choice suggests about compassion, courage, or the novel’s message.',
+      placeholder: 'The fact tells the reader... An arguable claim could be...'
+    },
+    q6: {
+      type: 'reflection',
+      label: 'Answer the “So what?” question',
+      prompt: 'Choose a character choice or literary element from The Outsiders. Explain what it reveals about the novel’s message, not just what happens.',
+      placeholder: 'The choice or element I chose is... It matters because...'
+    },
+    q7: {
+      prompt: 'For a book-and-film comparison, select the pair that would let a thesis make a meaningful comparison.'
+    },
+    q8: {
+      type: 'long_text',
+      label: 'Peer-review lens',
+      prompt: 'A partner says, “Johnny changes in the story.” Write one helpful question that could make this claim more specific, debatable, or connected to a theme.',
+      placeholder: 'What specific change...? How does that change...?'
+    },
+    q9: {
+      type: 'long_text',
+      label: 'Map a thesis to an essay',
+      prompt: 'Imagine your thesis argues that Ponyboy’s growth helps Hinton show empathy can challenge prejudice. Name two different points body paragraphs could prove, and what kind of text evidence each would need.',
+      placeholder: 'Paragraph point 1 + evidence:\nParagraph point 2 + evidence:'
+    },
+    q10: {
+      type: 'thesis_builder',
+      label: 'Mastery task: draft an arguable literary thesis',
+      standard: 'Standard 8.1.2.2',
+      variant: 'assessment-question',
+      prompt: 'Analyze how a character’s growth or a literary element develops a theme in The Outsiders. Fill in each part; the builder will combine them into a complete draft. Make the claim debatable and explain why it matters.',
+      required: true
+    }
+  };
+  const fieldList = (Array.isArray(fields) ? fields : []).map(field => ({
+    ...field,
+    ...(questionUpdates[field.field_id] || {})
+  }));
+  fieldList.push({
+    field_id: 'q11',
+    label: 'Self-assessment: How strong is your thesis draft right now?',
+    type: 'rating_scale',
+    variant: 'self-assessment-question',
+    prompt: 'Choose the description that best matches your current draft. This is a reflection to help you decide what to revise next.',
+    options: [
+      'Starting — I have a topic, but not yet an arguable claim.',
+      'Developing — I have a claim, but it needs greater specificity or thematic significance.',
+      'Ready — My thesis makes a specific, debatable claim about the novel and explains why it matters.',
+      'Extending — My thesis is focused and arguable, and it gives a clear direction for evidence and analysis.'
+    ]
+  }, {
+    field_id: 'q12',
+    label: 'Choose one revision move',
+    type: 'short_answer',
+    prompt: 'What is one specific change you will make to strengthen your thesis before drafting the essay?',
+    placeholder: 'I will revise... so that...'
+  });
+
+  const intro = document.createElement('div');
+  intro.className = 'form-intro';
+  intro.innerHTML = '<strong>Thesis Studio checkpoint:</strong> Identify the parts of an argument, distinguish analysis from plot summary, and then draft a thesis about <em>The Outsiders</em>. The 8.1.2.2 mastery task is highlighted; use the Quick Resource in the Resource Hub if you want a model.';
+  form.appendChild(intro);
 
   fieldList.forEach(field => {
     const group = document.createElement('div');
-    group.className = 'form-group';
+    group.className = `form-group ${field.variant || ''}`;
 
     const label = field.label || field.prompt || `Question ${field.field_id || ''}`.trim() || 'Question';
-    const id = `field_${(field.field_id || label).toString().replace(/\s+/g, '_').toLowerCase()}`;
+    const id = `field_${(field.field_id || label).toString().replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}`;
+    const helpId = `${id}_help`;
 
     let inputHTML = '';
     if (field.type === 'short_answer' || field.type === 'short_text' || field.type === 'text') {
-      inputHTML = `<input type="text" id="${id}" ${field.required ? 'required' : ''} />`;
+      inputHTML = `<input class="response-input" type="text" id="${id}" placeholder="${field.placeholder || 'Write your response'}" aria-describedby="${helpId}" ${field.required ? 'required' : ''} />`;
     } else if (field.type === 'date') {
-      inputHTML = `<input type="date" id="${id}" ${field.required ? 'required' : ''} />`;
+      inputHTML = `<input class="response-input" type="date" id="${id}" aria-describedby="${helpId}" ${field.required ? 'required' : ''} />`;
     } else if (field.type === 'long_text' || field.type === 'quote_citation' || field.type === 'reflection') {
-      inputHTML = `<textarea id="${id}" rows="5" ${field.required ? 'required' : ''}></textarea>`;
+      inputHTML = `<textarea class="response-input" id="${id}" rows="${field.rows || 5}" placeholder="${field.placeholder || 'Write your response'}" aria-describedby="${helpId}" ${field.required ? 'required' : ''}></textarea>`;
     } else if (field.type === 'multiple_choice' || field.type === 'true_false') {
       const options = field.type === 'true_false' ? ['True', 'False'] : (field.options || []);
-      inputHTML = options.map((option, index) => `<label><input type="radio" id="${id}_${index}" name="${id}" value="${option}" ${field.required ? 'required' : ''} /> ${option}</label>`).join('<br/>');
+      inputHTML = `<fieldset class="choice-list" aria-describedby="${helpId}"><legend>Select one response</legend>${options.map((option, index) => `<label class="choice-option"><input type="radio" id="${id}_${index}" name="${id}" value="${option}" ${field.required ? 'required' : ''} /> <span>${option}</span></label>`).join('')}</fieldset>`;
     } else if (field.type === 'checkbox') {
-      inputHTML = (field.options || []).map((option, index) => `<label><input type="checkbox" id="${id}_${index}" name="${id}" value="${option}" /> ${option}</label>`).join('<br/>');
+      inputHTML = `<fieldset class="choice-list" aria-describedby="${helpId}"><legend>Select all that apply</legend>${(field.options || []).map((option, index) => `<label class="choice-option"><input type="checkbox" id="${id}_${index}" name="${id}" value="${option}" /> <span>${option}</span></label>`).join('')}</fieldset>`;
     } else if (field.type === 'rating_scale') {
-      inputHTML = `<select id="${id}">${(field.options || []).map(o => `<option>${o}</option>`).join('')}</select>`;
+      inputHTML = `<select class="response-input" id="${id}" aria-describedby="${helpId}"><option value="">Choose the description that fits</option>${(field.options || []).map(o => `<option>${o}</option>`).join('')}</select>`;
     } else if (field.type === 'select_rubric') {
-      inputHTML = `<select id="${id}"><option>-- Select Rubric Benchmark Level --</option>${(field.options || []).map(o => `<option>${o}</option>`).join('')}</select>`;
+      inputHTML = `<select class="response-input" id="${id}" aria-describedby="${helpId}"><option value="">Choose a level</option>${(field.options || []).map(o => `<option>${o}</option>`).join('')}</select>`;
     } else if (field.type === 'checkbox_group' || field.type === 'multi_select') {
-      inputHTML = (field.options || []).map(o => `<label><input type="checkbox" name="${id}" value="${o}" /> ${o}</label>`).join('<br/>');
+      inputHTML = `<fieldset class="choice-list" aria-describedby="${helpId}"><legend>Select all that apply</legend>${(field.options || []).map((o, index) => `<label class="choice-option"><input type="checkbox" id="${id}_${index}" name="${id}" value="${o}" /> <span>${o}</span></label>`).join('')}</fieldset>`;
+    } else if (field.type === 'thesis_builder') {
+      inputHTML = `
+        <div class="thesis-builder">
+          <label for="${id}_focus">Literary focus</label>
+          <input class="response-input thesis-part" type="text" id="${id}_focus" placeholder="e.g., Ponyboy’s growth or Johnny’s sacrifice" required />
+          <label for="${id}_claim">Your arguable claim</label>
+          <input class="response-input thesis-part" type="text" id="${id}_claim" placeholder="What does the character or element reveal?" required />
+          <label for="${id}_significance">Thematic significance (“So what?”)</label>
+          <input class="response-input thesis-part" type="text" id="${id}_significance" placeholder="What broader message does this suggest?" required />
+          <p class="thesis-preview" id="${id}_preview" aria-live="polite">Your complete thesis draft will appear here as you write.</p>
+        </div>`;
     }
 
-    group.innerHTML = `<label for="${id}">${label}</label>${inputHTML}`;
+    const standard = field.standard ? `<span class="question-standard">${field.standard}</span>` : '';
+    const questionLabel = field.type === 'multiple_choice' || field.type === 'true_false' || field.type === 'checkbox_group' || field.type === 'multi_select'
+      ? `<h4 id="${id}_label">${label}</h4>`
+      : `<label for="${field.type === 'thesis_builder' ? `${id}_focus` : id}">${label}</label>`;
+    group.innerHTML = `${standard}${questionLabel}${field.prompt ? `<p class="response-guidance" id="${helpId}">${field.prompt}</p>` : ''}${inputHTML}`;
     form.appendChild(group);
+  });
+
+  form.querySelectorAll('.thesis-builder').forEach(builder => {
+    const parts = [...builder.querySelectorAll('.thesis-part')];
+    const preview = builder.querySelector('.thesis-preview');
+    const updatePreview = () => {
+      const [focus, claim, significance] = parts.map(input => input.value.trim());
+      preview.textContent = focus || claim || significance
+        ? `In The Outsiders, ${focus || '[literary focus]'} reveals that ${claim || '[arguable claim]'}, suggesting that ${significance || '[broader message]'}.`
+        : 'Your complete thesis draft will appear here as you write.';
+    };
+    parts.forEach(input => input.addEventListener('input', updatePreview));
   });
 
   if (submitBtn) form.appendChild(submitBtn);
